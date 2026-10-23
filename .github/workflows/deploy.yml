@@ -1,0 +1,71 @@
+name: Build and Deploy to ECS
+
+# Trigger: runs when a pull request is merged into main
+# (a closed PR event fires on both merge and reject, so we check merged == true)
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+env:
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}   # full URI, e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/fastapi-app
+  ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}          # name of your ECS cluster
+  ECS_SERVICE: ${{ secrets.ECS_SERVICE }}          # name of your ECS service
+
+jobs:
+  deploy:
+    name: Build, Push, Deploy
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+
+    steps:
+      # ── Step 1: Check out the repository code ─────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── Step 2: Authenticate GitHub Actions to AWS ────────────────────────
+      # Uses the AWS access key + secret stored as GitHub Secrets.
+      # After this step, all aws CLI commands below are authenticated.
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # ── Step 3: Log Docker into ECR ───────────────────────────────────────
+      # ECR requires a short-lived token to push images.
+      # This action runs `aws ecr get-login-password | docker login` for you.
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      # ── Step 4: Build the Docker image and push to ECR ────────────────────
+      # We tag with two labels:
+      #   - `latest`     → always points to the newest image
+      #   - `$GITHUB_SHA` → the exact Git commit SHA, useful for rollbacks
+      - name: Build and push Docker image
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+
+          docker build -t $ECR_REPOSITORY:latest -t $ECR_REPOSITORY:$IMAGE_TAG .
+
+          docker push $ECR_REPOSITORY:latest
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+
+          echo "Pushed image: $ECR_REPOSITORY:$IMAGE_TAG"
+
+      # ── Step 5: Tell ECS to redeploy with the new image ───────────────────
+      # `--force-new-deployment` makes ECS pull the new `latest` image
+      # and roll it out (stops old tasks, starts new ones).
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service $ECS_SERVICE \
+            --force-new-deployment \
+            --region $AWS_REGION
+
+          echo "Deployment triggered. Check ECS console for rollout status."

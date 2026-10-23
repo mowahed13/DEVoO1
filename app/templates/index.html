@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FastAPI DevOps Demo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 48px 56px;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: #0ea5e910;
+      color: #38bdf8;
+      border: 1px solid #0ea5e940;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: #94a3b8;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      text-align: left;
+    }
+
+    .info-item {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 14px 16px;
+    }
+
+    .info-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      font-weight: 500;
+      color: #e2e8f0;
+      font-family: monospace;
+    }
+
+    .env-prod  { color: #4ade80; }
+    .env-local { color: #fbbf24; }
+    .env-other { color: #a78bfa; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">FastAPI + Docker + ECS</div>
+    <h1>DevOps Learning Project</h1>
+    <p class="subtitle">
+      A minimal FastAPI app deployed to AWS ECS via ECR and GitHub Actions CI/CD.
+    </p>
+
+    <div class="info-grid">
+      <div class="info-item">
+        <div class="info-label">Environment</div>
+        <div class="info-value
+          {% if environment == 'production' %} env-prod
+          {% elif environment == 'local' %}    env-local
+          {% else %}                           env-other
+          {% endif %}">
+          {{ environment }}
+        </div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-label">Version</div>
+        <div class="info-value">{{ version }}</div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-label">Runtime</div>
+        <div class="info-value">FastAPI / uvicorn</div>
+      </div>
+
+      <div class="info-item">
+        <div class="info-label">Platform</div>
+        <div class="info-value">AWS ECS Fargate</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
