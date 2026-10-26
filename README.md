@@ -4,6 +4,8 @@ A minimal FastAPI app that walks through the complete AWS container deployment p
 
 **Local app → Docker image → ECR (registry) → ECS Fargate (runtime) → GitHub Actions (CI/CD)**
 
+**First deployment on 26 10 2026""
+
 ---
 
 ## What You Will Learn
